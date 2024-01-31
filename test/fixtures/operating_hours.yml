@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  description: MyText
+  standardHours: MyText
+  exceptions: MyText
+  park: one
+
+two:
+  name: MyString
+  description: MyText
+  standardHours: MyText
+  exceptions: MyText
+  park: two
