@@ -8,9 +8,24 @@ class NationalParksService
   end
 
   def parks(page: 1, limit: 50)
-    url = "#{BASE_URI}/parks"
+    fetch_data(endpoint: "/parks", params: { start: (page - 1) * limit, limit: limit })
+  end
+
+
+  # def fetch_images(park_code:)
+  #   fetch_data(endpoint: "/parks", params: { parkCode: park_code, fields: 'images' })
+  # end
+
+
+
+  private
+
+
+  def fetch_data(endpoint:, params:)
+    url = "#{BASE_URI}#{endpoint}"
     response = HTTP.headers(accept: 'application/json')
-      .get(url, params: { start: (page - 1) * limit, limit: limit, api_key: @api_key })
+      .get(url, params: params.merge(api_key: @api_key))
     response
   end
+
 end
