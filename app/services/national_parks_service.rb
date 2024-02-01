@@ -12,11 +12,10 @@ class NationalParksService
   end
 
 
-  # def fetch_images(park_code:)
-  #   fetch_data(endpoint: "/parks", params: { parkCode: park_code, fields: 'images' })
-  # end
-
-
+  def fetch_images(park_code:)
+    response = fetch_data(endpoint: "/parks", params: { parkCode: park_code, fields: 'images'})
+    JSON.parse(response.body.to_s)
+  end
 
   private
 
@@ -29,3 +28,13 @@ class NationalParksService
   end
 
 end
+
+
+
+# method for fetching parks data
+# def fetch_data(endpoint:, params:)
+#   url = "#{BASE_URI}#{endpoint}"
+#   response = HTTP.headers(accept: 'application/json')
+#     .get(url, params: params.merge(api_key: @api_key))
+#   response
+# end

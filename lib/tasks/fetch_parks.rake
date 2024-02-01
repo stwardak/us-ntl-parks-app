@@ -10,7 +10,6 @@ namespace :fetch do
 
     loop do
       response = service.parks(page: page, limit: limit)
-      puts "Debug: Response class is #{response.class}" #debug line
       
       if response.status.success?
         parsed_response = JSON.parse(response.body.to_s)
@@ -56,49 +55,33 @@ namespace :fetch do
 end
 
 
-#   # Rake task for fetching images
-#   desc "Fetch images data for each park"
-#   task images: :environment do
-#     service = NationalParksService.new
-#     Park.find_each do |park|
-#       images_data = service.fetch_images(park_code: park.parkCode)
-      
-#       if images_data.blank? || images_data['data'].blank?
-#         puts "No images found for park: #{park.fullName}"
-#         next
-#       end
+namespace :fetch do
+  desc "Fetch and save images for each park"
+  task images: :environment do
+    service = NationalParksService.new
 
-#       images_data['data'].each do |image_data|
-#         park.images.find_or_create_by(url: image_data['url']) do |image|
-#           image.api_id = image_data['id']
-#           image.credit = image_data['credit']
-#           image.altText = image_data['altText']
-#           image.title = image_data['title']
-#           image.caption = image_data['caption']
-#         end
-#       end
+    Park.find_each do |park|
+      puts "Fetching images for #{park.name}..."
+      park_data = service.fetch_images(park_code: park.parkCode)
+      puts park_data.inspect # debug
+      next unless park_data && park_data['data'] && park_data['data'].first['images']
 
+      park_data['data'].first['images'].each do |image_data|
+        image = park.images.find_or_initialize_by(url: image_data['url'])
+        image.assign_attributes(
+          credit: image_data['credit'],
+          altText: image_data['altText'],
+          title: image_data['title'],
+          caption: image_data['caption'],
+          api_id: park_data['id']
+        )
 
-#       puts "Fetched and saved images for park: #{park.fullName}"
-#     end
-#   end
-
-
-# namespace :fetch do
-#   desc "Fetch a single page of parks data from National Parks API for debugging"
-#   task debug_fetch_parks: :environment do
-#     service = NationalParksService.new
-#     page = 1 # Fetch the first page
-#     limit = 50 # Limit to 50 records, adjust as necessary
-
-#     puts "Attempting to fetch a single page of parks data..."
-#     response = service.parks(page: page, limit: limit)
-
-#     if response.is_a?(Hash) && response.key?('data')
-#       puts "Successfully fetched parks data:"
-#       puts response['data'].map { |park| park['fullName'] }.join(", ")
-#     else
-#       puts "Failed to fetch parks data or unexpected response format."
-#     end
-#   end
-# end
+        if image.save
+          puts "Saved image: #{image.title}"
+        else
+          puts "Failed to save image: #{image.errors.full_messages.join(', ')}"
+        end
+      end
+    end
+  end
+end
